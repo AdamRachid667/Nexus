@@ -4,23 +4,28 @@ require 'db.php';
 
 $erreur = '';
 
+// si le formulaire est envoye
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $pseudo = $_POST['pseudo'];
     $mdp = $_POST['mdp'];
     $mdp2 = $_POST['mdp2'];
 
+    // je verifie les erreurs
     if ($pseudo == '' || $mdp == '' || $mdp2 == '') {
         $erreur = 'Remplis tous les champs';
     } elseif ($mdp != $mdp2) {
         $erreur = 'Les mots de passe ne correspondent pas';
     } else {
-        // Verifier si le pseudo existe
+        // je verifie si le pseudo est deja pris
         $result = mysqli_query($connexion, "SELECT * FROM users WHERE pseudo = '$pseudo'");
         if (mysqli_num_rows($result) > 0) {
             $erreur = 'Ce pseudo est deja pris';
         } else {
+            // password_hash() ca transforme le mot de passe en hash (impossible a lire)
             $mdp_hash = password_hash($mdp, PASSWORD_DEFAULT);
+            // j'insere le nouvel utilisateur dans ma table users
             mysqli_query($connexion, "INSERT INTO users (pseudo, mdp) VALUES ('$pseudo', '$mdp_hash')");
+            // je le connecte directement apres l'inscription
             $_SESSION['user'] = $pseudo;
             header('Location: index.php');
             exit;

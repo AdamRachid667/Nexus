@@ -2,10 +2,13 @@
 session_start();
 require 'db.php';
 
+// On recupere le mot-cle de recherche depuis l'URL
 $query = $_GET['q'] ?? '';
 $resultats = [];
 
 if ($query != '') {
+    // On cherche dans la base les posts qui contiennent le mot-cle dans le titre ou le contenu
+    // LIKE '%mot%' = contient le mot quelque part dans le texte
     $result = mysqli_query($connexion, "SELECT * FROM posts WHERE titre LIKE '%$query%' OR contenu LIKE '%$query%' ORDER BY date_creation DESC");
     while ($row = mysqli_fetch_assoc($result)) {
         $resultats[] = $row;
@@ -29,6 +32,7 @@ if ($query != '') {
 </header>
 
 <main>
+    <!-- Barre de recherche -->
     <section class="search-section">
         <form action="search.php" method="GET">
             <input type="text" name="q" placeholder="Rechercher..." value="<?php echo htmlspecialchars($query); ?>" required>
@@ -36,6 +40,7 @@ if ($query != '') {
         </form>
     </section>
 
+    <!-- Resultats -->
     <section class="posts">
         <h2>Resultats (<?php echo count($resultats); ?>)</h2>
 
@@ -43,6 +48,7 @@ if ($query != '') {
             <p class="no-posts">Aucun resultat</p>
         <?php endif; ?>
 
+        <!-- On affiche chaque resultat -->
         <?php for ($i = 0; $i < count($resultats); $i++): ?>
         <article class="post-card">
             <div class="post-header">

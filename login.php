@@ -4,14 +4,18 @@ require 'db.php';
 
 $erreur = '';
 
+// si le formulaire est envoye
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $pseudo = $_POST['pseudo'];
     $mdp = $_POST['mdp'];
 
+    // je cherche l'utilisateur dans ma base
     $result = mysqli_query($connexion, "SELECT * FROM users WHERE pseudo = '$pseudo'");
     $user = mysqli_fetch_assoc($result);
 
+    // password_verify() compare le mdp tape avec le hash en base
     if ($user && password_verify($mdp, $user['mdp'])) {
+        // c'est bon, je le connecte en mettant son pseudo dans la session
         $_SESSION['user'] = $pseudo;
         header('Location: index.php');
         exit;
@@ -39,6 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <main>
     <section class="form-page">
         <h2>Connexion</h2>
+        <!-- j'affiche l'erreur si y en a une -->
         <?php if ($erreur != ''): ?>
             <p class="error-msg visible"><?php echo $erreur; ?></p>
         <?php endif; ?>

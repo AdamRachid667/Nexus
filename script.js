@@ -1,4 +1,5 @@
 // === VALIDATION DU FORMULAIRE DE POST ===
+// je verifie que le formulaire est bien rempli avant de l'envoyer
 var formPost = document.getElementById('form-post');
 if (formPost) {
     formPost.addEventListener('submit', function(e) {
@@ -6,47 +7,50 @@ if (formPost) {
         var contenu = document.getElementById('contenu').value.trim();
         var erreur = document.getElementById('error-msg');
 
-        // Validation
+        // je verifie que les champs sont pas vides
         if (titre == '' || contenu == '') {
-            e.preventDefault();
+            e.preventDefault(); // j'empeche l'envoi du formulaire
             erreur.textContent = 'Le titre et le contenu sont obligatoires !';
             erreur.style.display = 'block';
             return;
         }
 
+        // je verifie la longueur du titre
         if (titre.length > 100) {
             e.preventDefault();
-            erreur.textContent = 'Le titre ne peut pas dépasser 100 caractères !';
+            erreur.textContent = 'Le titre ne peut pas depasser 100 caracteres !';
             erreur.style.display = 'block';
             return;
         }
 
+        // je verifie la longueur du contenu
         if (contenu.length > 2000) {
             e.preventDefault();
-            erreur.textContent = 'Le contenu ne peut pas dépasser 2000 caractères !';
+            erreur.textContent = 'Le contenu ne peut pas depasser 2000 caracteres !';
             erreur.style.display = 'block';
             return;
         }
 
-        // Verifier l'image
+        // je verifie l'image si y en a une
         var image = document.getElementById('image');
         if (image.files.length > 0) {
             var fichier = image.files[0];
             var extensions = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
             if (extensions.indexOf(fichier.type) == -1) {
                 e.preventDefault();
-                erreur.textContent = 'Format d\'image non supporté ! (JPG, PNG, GIF, WEBP)';
+                erreur.textContent = 'Format d\'image pas supporte ! (JPG, PNG, GIF, WEBP)';
                 erreur.style.display = 'block';
                 return;
             }
             if (fichier.size > 5000000) {
                 e.preventDefault();
-                erreur.textContent = 'L\'image ne doit pas dépasser 5 Mo !';
+                erreur.textContent = 'L\'image doit pas depasser 5 Mo !';
                 erreur.style.display = 'block';
                 return;
             }
         }
 
+        // tout est bon, je cache l'erreur
         erreur.style.display = 'none';
     });
 }
@@ -61,25 +65,26 @@ if (formRegister) {
 
         if (pseudo.length < 3 || pseudo.length > 20) {
             e.preventDefault();
-            alert('Le pseudo doit faire entre 3 et 20 caractères.');
+            alert('Le pseudo doit faire entre 3 et 20 caracteres.');
             return;
         }
 
         if (mdp.length < 4) {
             e.preventDefault();
-            alert('Le mot de passe doit faire au moins 4 caractères.');
+            alert('Le mot de passe doit faire au moins 4 caracteres.');
             return;
         }
 
         if (mdp != mdp2) {
             e.preventDefault();
-            alert('Les mots de passe ne correspondent pas !');
+            alert('Les mots de passe correspondent pas !');
             return;
         }
     });
 }
 
-// === SYSTEME DE LIKE (AJAX) ===
+// === SYSTEME DE LIKE ===
+// j'envoie une requete au serveur sans recharger la page (AJAX avec fetch)
 function likePost(id) {
     fetch('like.php', {
         method: 'POST',
@@ -89,6 +94,7 @@ function likePost(id) {
     .then(function(response) { return response.json(); })
     .then(function(data) {
         if (data.likes !== undefined) {
+            // je mets a jour le nombre de likes affiche
             document.getElementById('likes-' + id).textContent = data.likes;
         } else if (data.error == 'Non connecte') {
             alert('Connecte-toi pour liker !');
@@ -96,7 +102,7 @@ function likePost(id) {
     });
 }
 
-// === AFFICHER/MASQUER COMMENTAIRES ===
+// === AFFICHER/MASQUER LES COMMENTAIRES ===
 function toggleComments(id) {
     var section = document.getElementById('comments-' + id);
     if (section.style.display == 'none') {
@@ -106,16 +112,17 @@ function toggleComments(id) {
     }
 }
 
-// === AJOUTER UN COMMENTAIRE (AJAX) ===
+// === AJOUTER UN COMMENTAIRE ===
+// pareil, j'envoie en AJAX sans recharger la page
 function addComment(e, postId) {
-    e.preventDefault();
+    e.preventDefault(); // j'empeche le rechargement de la page
     var input = document.getElementById('comment-input-' + postId);
     var texte = input.value.trim();
 
     if (texte == '') return;
 
     if (texte.length > 500) {
-        alert('Commentaire trop long (max 500 caractères) !');
+        alert('Commentaire trop long (max 500 caracteres) !');
         return;
     }
 
@@ -127,15 +134,15 @@ function addComment(e, postId) {
     .then(function(response) { return response.json(); })
     .then(function(data) {
         if (data.success) {
-            // Ajouter le commentaire dans la page
+            // j'ajoute le commentaire directement dans la page
             var liste = document.getElementById('comments-' + postId).querySelector('.comments-list');
             var div = document.createElement('div');
             div.className = 'comment';
             div.innerHTML = '<strong>' + escapeHtml(data.commentaire.auteur) + '</strong>' +
-                '<span class="comment-date"> à l\'instant</span>' +
+                '<span class="comment-date"> a l\'instant</span>' +
                 '<p>' + escapeHtml(data.commentaire.texte) + '</p>';
             liste.insertBefore(div, liste.firstChild);
-            input.value = '';
+            input.value = ''; // je vide le champ
         } else if (data.error == 'Non connecte') {
             alert('Connecte-toi pour commenter !');
         }
@@ -154,12 +161,14 @@ function deleteComment(commentId) {
     .then(function(response) { return response.json(); })
     .then(function(data) {
         if (data.success) {
+            // je retire le commentaire de la page
             document.getElementById('comment-' + commentId).remove();
         }
     });
 }
 
 // === PROTECTION XSS ===
+// cette fonction empeche d'injecter du code HTML malveillant
 function escapeHtml(text) {
     var div = document.createElement('div');
     div.textContent = text;
@@ -169,20 +178,19 @@ function escapeHtml(text) {
 // === MODE SOMBRE / CLAIR ===
 var btnDark = document.getElementById('btn-dark-mode');
 if (btnDark) {
-    // Charger la preference
+    // je verifie si l'utilisateur avait choisi le mode clair avant
     if (localStorage.getItem('theme') == 'light') {
         document.body.classList.add('light-mode');
-        btnDark.textContent = 'Mode';
     }
 
+    // quand je clique sur le bouton, je bascule le theme
     btnDark.addEventListener('click', function() {
         document.body.classList.toggle('light-mode');
+        // je sauvegarde le choix dans le localStorage (ca reste meme si on ferme le navigateur)
         if (document.body.classList.contains('light-mode')) {
             localStorage.setItem('theme', 'light');
-            btnDark.textContent = 'Mode';
         } else {
             localStorage.setItem('theme', 'dark');
-            btnDark.textContent = 'Mode';
         }
     });
 }
