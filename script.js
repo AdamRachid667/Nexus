@@ -143,18 +143,18 @@ function addComment(e, postId) {
 }
 
 // === SUPPRIMER UN COMMENTAIRE ===
-function deleteComment(postId, index) {
+function deleteComment(commentId) {
     if (!confirm('Supprimer ce commentaire ?')) return;
 
     fetch('delete_comment.php', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({post_id: postId, comment_index: index})
+        body: JSON.stringify({id: commentId})
     })
     .then(function(response) { return response.json(); })
     .then(function(data) {
         if (data.success) {
-            document.getElementById('comment-' + postId + '-' + index).remove();
+            document.getElementById('comment-' + commentId).remove();
         }
     });
 }

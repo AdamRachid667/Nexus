@@ -1,5 +1,6 @@
 <?php
 session_start();
+require 'db.php';
 
 if (!isset($_SESSION['user'])) {
     header('Location: login.php');
@@ -7,20 +8,12 @@ if (!isset($_SESSION['user'])) {
 }
 
 $post_id = $_GET['id'];
+$pseudo = $_SESSION['user'];
 
-$posts = json_decode(file_get_contents('data/posts.json'), true);
-
-// Garder tous les posts sauf celui a supprimer (si c'est le bon auteur)
-$nouveaux_posts = [];
-for ($i = 0; $i < count($posts); $i++) {
-    if ($posts[$i]['id'] == $post_id && $posts[$i]['auteur'] == $_SESSION['user']) {
-        // On supprime ce post (on ne l'ajoute pas)
-    } else {
-        $nouveaux_posts[] = $posts[$i];
-    }
-}
-
-file_put_contents('data/posts.json', json_encode($nouveaux_posts));
+// Supprimer seulement si c'est l'auteur
+mysqli_query($connexion, "DELETE FROM commentaires WHERE post_id = $post_id");
+mysqli_query($connexion, "DELETE FROM likes WHERE post_id = $post_id");
+mysqli_query($connexion, "DELETE FROM posts WHERE id = $post_id AND auteur = '$pseudo'");
 
 header('Location: index.php');
 ?>

@@ -1,18 +1,14 @@
 <?php
 session_start();
+require 'db.php';
 
 $query = $_GET['q'] ?? '';
 $resultats = [];
 
 if ($query != '') {
-    $posts = json_decode(file_get_contents('data/posts.json'), true);
-
-    // Chercher dans les posts
-    for ($i = 0; $i < count($posts); $i++) {
-        if (strpos(strtolower($posts[$i]['titre']), strtolower($query)) !== false ||
-            strpos(strtolower($posts[$i]['contenu']), strtolower($query)) !== false) {
-            $resultats[] = $posts[$i];
-        }
+    $result = mysqli_query($connexion, "SELECT * FROM posts WHERE titre LIKE '%$query%' OR contenu LIKE '%$query%' ORDER BY date_creation DESC");
+    while ($row = mysqli_fetch_assoc($result)) {
+        $resultats[] = $row;
     }
 }
 ?>
@@ -51,7 +47,7 @@ if ($query != '') {
         <article class="post-card">
             <div class="post-header">
                 <span class="post-author">👤 <?php echo $resultats[$i]['auteur']; ?></span>
-                <span class="post-date"><?php echo date('d/m/Y H:i', $resultats[$i]['date']); ?></span>
+                <span class="post-date"><?php echo date('d/m/Y H:i', strtotime($resultats[$i]['date_creation'])); ?></span>
             </div>
             <h3><?php echo $resultats[$i]['titre']; ?></h3>
             <p><?php echo $resultats[$i]['contenu']; ?></p>

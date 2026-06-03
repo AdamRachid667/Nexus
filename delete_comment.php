@@ -1,5 +1,6 @@
 <?php
 session_start();
+require 'db.php';
 
 if (!isset($_SESSION['user'])) {
     echo json_encode(['error' => 'Non connecte']);
@@ -7,23 +8,11 @@ if (!isset($_SESSION['user'])) {
 }
 
 $data = json_decode(file_get_contents('php://input'), true);
-$post_id = $data['post_id'];
-$comment_index = $data['comment_index'];
+$comment_id = $data['id'];
+$pseudo = $_SESSION['user'];
 
-$posts = json_decode(file_get_contents('data/posts.json'), true);
+// Supprimer seulement si c'est l'auteur
+mysqli_query($connexion, "DELETE FROM commentaires WHERE id = $comment_id AND auteur = '$pseudo'");
 
-// Chercher le post et supprimer le commentaire
-for ($i = 0; $i < count($posts); $i++) {
-    if ($posts[$i]['id'] == $post_id) {
-        // Verifier que c'est bien l'auteur du commentaire
-        if ($posts[$i]['commentaires'][$comment_index]['auteur'] == $_SESSION['user']) {
-            array_splice($posts[$i]['commentaires'], $comment_index, 1);
-            file_put_contents('data/posts.json', json_encode($posts));
-            echo json_encode(['success' => true]);
-            exit;
-        }
-    }
-}
-
-echo json_encode(['error' => 'Impossible de supprimer']);
+echo json_encode(['success' => true]);
 ?>

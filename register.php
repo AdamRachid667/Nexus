@@ -1,5 +1,6 @@
 <?php
 session_start();
+require 'db.php';
 
 $erreur = '';
 
@@ -13,28 +14,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     } elseif ($mdp != $mdp2) {
         $erreur = 'Les mots de passe ne correspondent pas';
     } else {
-        // Charger les utilisateurs
-        $users = json_decode(file_get_contents('data/users.json'), true);
-
         // Verifier si le pseudo existe
-        $existe = false;
-        for ($i = 0; $i < count($users); $i++) {
-            if ($users[$i]['pseudo'] == $pseudo) {
-                $existe = true;
-            }
-        }
-
-        if ($existe) {
+        $result = mysqli_query($connexion, "SELECT * FROM users WHERE pseudo = '$pseudo'");
+        if (mysqli_num_rows($result) > 0) {
             $erreur = 'Ce pseudo est deja pris';
         } else {
-            // Creer le compte
-            $users[] = [
-                'pseudo' => $pseudo,
-                'mdp' => password_hash($mdp, PASSWORD_DEFAULT),
-                'date_inscription' => time()
-            ];
-            file_put_contents('data/users.json', json_encode($users));
-
+            $mdp_hash = password_hash($mdp, PASSWORD_DEFAULT);
+            mysqli_query($connexion, "INSERT INTO users (pseudo, mdp) VALUES ('$pseudo', '$mdp_hash')");
             $_SESSION['user'] = $pseudo;
             header('Location: index.php');
             exit;

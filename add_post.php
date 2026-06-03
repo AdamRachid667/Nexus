@@ -1,7 +1,7 @@
 <?php
 session_start();
+require 'db.php';
 
-// Si pas connecte, retour a l'accueil
 if (!isset($_SESSION['user'])) {
     header('Location: login.php');
     exit;
@@ -10,7 +10,6 @@ if (!isset($_SESSION['user'])) {
 $titre = $_POST['titre'];
 $contenu = $_POST['contenu'];
 
-// Verifier que les champs sont remplis
 if ($titre == '' || $contenu == '') {
     header('Location: index.php');
     exit;
@@ -24,24 +23,8 @@ if ($_FILES['image']['error'] == 0) {
     $image = 'uploads/' . $nom;
 }
 
-// Charger les posts
-$posts = json_decode(file_get_contents('data/posts.json'), true);
-
-// Ajouter le nouveau post
-$posts[] = [
-    'id' => uniqid(),
-    'auteur' => $_SESSION['user'],
-    'titre' => $titre,
-    'contenu' => $contenu,
-    'image' => $image,
-    'date' => time(),
-    'likes' => 0,
-    'liked_by' => [],
-    'commentaires' => []
-];
-
-// Sauvegarder
-file_put_contents('data/posts.json', json_encode($posts));
+$auteur = $_SESSION['user'];
+mysqli_query($connexion, "INSERT INTO posts (auteur, titre, contenu, image) VALUES ('$auteur', '$titre', '$contenu', '$image')");
 
 header('Location: index.php');
 ?>

@@ -1,5 +1,6 @@
 <?php
 session_start();
+require 'db.php';
 
 if (!isset($_SESSION['user'])) {
     echo json_encode(['error' => 'Non connecte']);
@@ -9,26 +10,19 @@ if (!isset($_SESSION['user'])) {
 $data = json_decode(file_get_contents('php://input'), true);
 $post_id = $data['id'];
 $texte = $data['texte'];
+$auteur = $_SESSION['user'];
 
 if ($texte == '') {
     echo json_encode(['error' => 'Texte vide']);
     exit;
 }
 
-$posts = json_decode(file_get_contents('data/posts.json'), true);
+mysqli_query($connexion, "INSERT INTO commentaires (post_id, auteur, texte) VALUES ($post_id, '$auteur', '$texte')");
 
-// Chercher le post et ajouter le commentaire
-for ($i = 0; $i < count($posts); $i++) {
-    if ($posts[$i]['id'] == $post_id) {
-        $commentaire = [
-            'auteur' => $_SESSION['user'],
-            'texte' => $texte,
-            'date' => time()
-        ];
-        $posts[$i]['commentaires'][] = $commentaire;
-        file_put_contents('data/posts.json', json_encode($posts));
-        echo json_encode(['success' => true, 'commentaire' => $commentaire]);
-        exit;
-    }
-}
+$commentaire = [
+    'auteur' => $auteur,
+    'texte' => $texte
+];
+
+echo json_encode(['success' => true, 'commentaire' => $commentaire]);
 ?>

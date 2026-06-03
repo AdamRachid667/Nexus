@@ -1,5 +1,6 @@
 <?php
 session_start();
+require 'db.php';
 
 $erreur = '';
 
@@ -7,19 +8,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $pseudo = $_POST['pseudo'];
     $mdp = $_POST['mdp'];
 
-    // Charger les utilisateurs
-    $users = json_decode(file_get_contents('data/users.json'), true);
+    $result = mysqli_query($connexion, "SELECT * FROM users WHERE pseudo = '$pseudo'");
+    $user = mysqli_fetch_assoc($result);
 
-    // Chercher l'utilisateur
-    for ($i = 0; $i < count($users); $i++) {
-        if ($users[$i]['pseudo'] == $pseudo && password_verify($mdp, $users[$i]['mdp'])) {
-            $_SESSION['user'] = $pseudo;
-            header('Location: index.php');
-            exit;
-        }
+    if ($user && password_verify($mdp, $user['mdp'])) {
+        $_SESSION['user'] = $pseudo;
+        header('Location: index.php');
+        exit;
+    } else {
+        $erreur = 'Pseudo ou mot de passe incorrect';
     }
-
-    $erreur = 'Pseudo ou mot de passe incorrect';
 }
 ?>
 <!DOCTYPE html>

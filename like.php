@@ -1,5 +1,6 @@
 <?php
 session_start();
+require 'db.php';
 
 if (!isset($_SESSION['user'])) {
     echo json_encode(['error' => 'Non connecte']);
@@ -8,28 +9,23 @@ if (!isset($_SESSION['user'])) {
 
 $data = json_decode(file_get_contents('php://input'), true);
 $post_id = $data['id'];
+$pseudo = $_SESSION['user'];
 
-$posts = json_decode(file_get_contents('data/posts.json'), true);
+// Verifier si deja like
+$result = mysqli_query($connexion, "SELECT * FROM likes WHERE post_id = $post_id AND pseudo = '$pseudo'");
 
-// Chercher le post et liker/unliker
-for ($i = 0; $i < count($posts); $i++) {
-    if ($posts[$i]['id'] == $post_id) {
-
-        // Si deja like, on unlike
-        if (in_array($_SESSION['user'], $posts[$i]['liked_by'])) {
-            $posts[$i]['likes']--;
-            $index = array_search($_SESSION['user'], $posts[$i]['liked_by']);
-            unset($posts[$i]['liked_by'][$index]);
-            $posts[$i]['liked_by'] = array_values($posts[$i]['liked_by']);
-        } else {
-            // Sinon on like
-            $posts[$i]['likes']++;
-            $posts[$i]['liked_by'][] = $_SESSION['user'];
-        }
-
-        file_put_contents('data/posts.json', json_encode($posts));
-        echo json_encode(['likes' => $posts[$i]['likes']]);
-        exit;
-    }
+if (mysqli_num_rows($result) > 0) {
+    // Unlike
+    mysqli_query($connexion, "DELETE FROM likes WHERE post_id = $post_id AND pseudo = '$pseudo'");
+    mysqli_query($connexion, "UPDATE posts SET likes = likes - 1 WHERE id = $post_id");
+} else {
+    // Like
+    mysqli_query($connexion, "INSERT INTO likes (post_id, pseudo) VALUES ($post_id, '$pseudo')");
+    mysqli_query($connexion, "UPDATE posts SET likes = likes + 1 WHERE id = $post_id");
 }
+
+// Recuperer le nouveau nombre de likes
+$result = mysqli_query($connexion, "SELECT likes FROM posts WHERE id = $post_id");
+$post = mysqli_fetch_assoc($result);
+echo json_encode(['likes' => $post['likes']]);
 ?>
