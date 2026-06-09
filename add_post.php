@@ -21,9 +21,8 @@ if ($titre == '' || $contenu == '') {
 // je gere l'upload de l'image
 $image = '';
 if ($_FILES['image']['error'] == 0) {
-    // uniqid() ca genere un nom unique pour pas avoir 2 images avec le meme nom
-    $nom = uniqid() . '.jpg';
-    // je deplace l'image dans mon dossier uploads/
+    $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
+    $nom = uniqid() . '.' . $ext;
     move_uploaded_file($_FILES['image']['tmp_name'], 'uploads/' . $nom);
     $image = 'uploads/' . $nom;
 }
